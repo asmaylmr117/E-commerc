@@ -1,0 +1,20 @@
+[
+    {
+      "id": 1,
+      "image": "f7.jpg",
+      "hoverImage": "oppo.webp",
+      "price": 25
+    },
+    {
+      "id": 2,
+      "image": "iphon.jpg",
+      "hoverImage": "ipo.webp",
+      "price": 30
+    },
+    {
+      "id": 3,
+      "image": "redmi.jpg",
+      "hoverImage": "sreen.jpeg",
+      "price": 20
+    }
+  ]

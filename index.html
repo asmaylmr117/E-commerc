@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-commerce Page</title>
+    <!-- إضافة روابط CDN لـ Tailwind CSS و React.js -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/react@17/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@17/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+
+    <style>
+        /* تأثير عند التمرير */
+        .product:hover .hover-image {
+            opacity: 1;
+        }
+
+        .hover-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .product {
+            position: relative;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <!-- الجزء المحدث من الكود -->
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+    // حالة ومصادر البيانات الأخرى هنا
+    const [activeSlide, setActiveSlide] = useState(0);
+    const [cartCount, setCartCount] = useState(0);
+    const [showSections, setShowSections] = useState(true);
+    const [showShopping, setShowShopping] = useState(false);
+    const [showContact, setShowContact] = useState(false);
+    const [showAbout, setShowAbout] = useState(false);
+    const [cartItems, setCartItems] = useState([]);
+    const [total, setTotal] = useState(0);
+    const [products, setProducts] = useState([]);
+    const [showLogin, setShowLogin] = useState(false);
+    const [showSignUp, setShowSignUp] = useState(false);
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        message: ''
+    });
+    const [statusMessage, setStatusMessage] = useState('');
+    const totalSlides = 5;
+    const [slides, setSlides] = useState([]);
+    const [loginEmail, setLoginEmail] = useState('');
+    const [loginPassword, setLoginPassword] = useState('');
+    const [loginStatusMessage, setLoginStatusMessage] = useState('');
+    const [signupName, setSignupName] = useState('');
+    const [signupEmail, setSignupEmail] = useState('');
+    const [signupPassword, setSignupPassword] = useState('');
+    const [signupStatusMessage, setSignupStatusMessage] = useState('');
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setActiveSlide((prev) => (prev + 1) % totalSlides);
+        }, 1500); // تغيير الصورة كل 1.5 ثانية
+
+        return () => clearInterval(interval);
+    }, [totalSlides]);
+
+    useEffect(() => {
+        fetch('items.json')
+            .then((response) => response.json())
+            .then((data) => setProducts(data))
+            .catch((error) => console.error('Error fetching products:', error));
+    }, []);
+
+    useEffect(() => {
+        fetch('slider.json')
+            .then(response => response.json())
+            .then(data => setSlides(data))
+            .catch(error => console.error('Error fetching slides:', error));
+    }, []);
+
+    const addToCart = (product) => {
+        setCartCount(cartCount + 1);
+        setCartItems([...cartItems, product]);
+        setTotal(total + product.price);
+    };
+
+    const removeFromCart = (index) => {
+        const updatedItems = [...cartItems];
+        setTotal(total - updatedItems[index].price);
+        updatedItems.splice(index, 1);
+        setCartItems(updatedItems);
+        setCartCount(cartCount - 1);
+    };
+
+    const toggleSections = () => {
+        setShowSections(true);
+        setShowShopping(false);
+        setShowContact(false);
+        setShowAbout(false);
+        setShowLogin(false);
+        setShowSignUp(false);
+    };
+
+    const toggleShopping = () => {
+        setShowSections(false);
+        setShowShopping(true);
+        setShowContact(false);
+        setShowAbout(false);
+        setShowLogin(false);
+        setShowSignUp(false);
+    };
+
+    const toggleContact = () => {
+        setShowSections(false);
+        setShowShopping(false);
+        setShowContact(true);
+        setShowAbout(false);
+        setShowLogin(false);
+        setShowSignUp(false);
+    };
+
+    const showAboutSection = () => {
+        setShowSections(false);
+        setShowShopping(false);
+        setShowContact(false);
+        setShowAbout(true);
+        setShowLogin(false);
+        setShowSignUp(false);
+    };
+
+    const showLoginSection = () => {
+        setShowSections(false);
+        setShowShopping(false);
+        setShowContact(false);
+        setShowAbout(false);
+        setShowLogin(true);
+        setShowSignUp(false);
+    };
+
+    const showSignUpSection = () => {
+        setShowSections(false);
+        setShowShopping(false);
+        setShowContact(false);
+        setShowAbout(false);
+        setShowLogin(false);
+        setShowSignUp(true);
+    };
+
+    const handleOrderSubmit = (event) => {
+        event.preventDefault();
+
+        // جمع بيانات النموذج
+        const formData = {
+            name: event.target.name.value,
+            email: event.target.email.value,
+            address: event.target.address.value,
+            phone: event.target.phone.value,
+        };
+
+        // جمع بيانات المنتجات في السلة
+        const cartData = cartItems.map(item => ({
+            name: item.name,
+            price: item.price,
+            img: item.img
+        }));
+
+        // إجمالي السعر
+        const totalPrice = total.toFixed(2);
+
+        // دمج جميع البيانات في كائن واحد
+        const dataToSend = {
+            customerDetails: formData,
+            cartItems: cartData,
+            totalPrice: totalPrice
+        };
+
+        // إرسال البيانات إلى الـ API
+        fetch('YOUR_API_ENDPOINT', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSend),
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                alert('Order submitted successfully!');
+                // يمكنك إعادة تعيين السلة أو النموذج هنا إذا لزم الأمر
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('There was an error submitting your order. Please try again.');
+            });
+    };
+
+    const handleContactSubmit = async (event) => {
+        event.preventDefault();
+
+        try {
+            const response = await fetch('https://your-api-url.com/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (response.ok) {
+                setStatusMessage('Message sent successfully!');
+            } else {
+                setStatusMessage('Failed to send message. Please try again.');
+            }
+        } catch (error) {
+            setStatusMessage('An error occurred. Please try again.');
+        }
+    };
+
+    const handleChange = (e) => {
+        const { id, value } = e.target;
+        setFormData((prevData) => ({
+            ...prevData,
+            [id]: value
+        }));
+    };
+    const handleLoginSubmit = (event) => {
+        event.preventDefault();
+
+        const loginData = {
+            email: loginEmail,
+            password: loginPassword
+        };
+
+        fetch('YOUR_LOGIN_API_ENDPOINT', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(loginData),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setLoginStatusMessage('Login successful!');
+                    // هنا يمكنك تنفيذ إجراءات إضافية مثل توجيه المستخدم إلى صفحة أخرى
+                } else {
+                    setLoginStatusMessage('Login failed. Please check your credentials and try again.');
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                setLoginStatusMessage('An error occurred. Please try again.');
+            });
+    }; const handleSignupSubmit = async (event) => {
+        event.preventDefault();
+
+        const signupData = {
+            name: signupName,
+            email: signupEmail,
+            password: signupPassword,
+        };
+
+        try {
+            const response = await fetch('YOUR_API_SIGNUP_ENDPOINT', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(signupData),
+            });
+
+            if (response.ok) {
+                setSignupStatusMessage('Sign up successful!');
+            } else {
+                setSignupStatusMessage('Sign up failed. Please try again.');
+            }
+        } catch (error) {
+            setSignupStatusMessage('An error occurred. Please try again.');
+        }
+    };
+
+
+            return (
+                <div id="content" className="mt-32">
+                    <div id="main" className="flex flex-wrap items-center justify-between p-4 bg-gray-100 fixed top-0 left-0 right-0 z-50">
+                        {/* شعار E-commerce */}
+                        <h1 className="text-xl font-bold ml-4 sm:text-lg sm:ml-2 md:text-xl md:ml-12">
+                            <span className="text-black">E-</span>
+                            <span className="text-yellow-500">commerce</span>
+                        </h1>
+                        {/* الأزرار */}
+                        <div className="flex-1 flex items-center justify-center">
+                            <button className="bg-yellow-500 text-white hover:bg-yellow-600  py-1 px-3 rounded-md mx-1 sm:py-2 sm:px-4 sm:mx-2" onClick={showLoginSection}>Login</button>
+                            <button className="bg-yellow-500 text-white hover:bg-yellow-600  py-1 px-3 rounded-md mx-1 sm:py-2 sm:px-4 sm:mx-2" onClick={showSignUpSection}>Sign Up</button>
+                        </div>
+                        {/* أيقونة السلة مع العداد */}
+                        <div className="flex items-center">
+                            <button
+                                className="bg-yellow-500 text-white p-2 hover:bg-yellow-600  rounded-full flex items-center justify-center"
+                                onClick={toggleShopping}
+                            >
+                                <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l1.4 7M17 13l-1.4 7M5.4 5h13.2m0 0L18 13m0-8H5m0 0H3"
+                                    ></path>
+                                </svg>
+                            </button>
+                            {/* العداد */}
+                            <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full ml-2">
+                                {cartCount}
+                            </span>
+                        </div>
+                    </div>
+                    {/* الروابط */}
+                    <div id="first" className="flex justify-center space-x-8 p-4 bg-gray-200 fixed top-16 left-0 right-0 z-40">
+                        <a href="#" className="text-gray-700 hover:text-yellow-500 font-semibold hover:underline  hover:decoration-orange-600" onClick={toggleSections} style={{ textUnderlineOffset: '9px', textDecorationThickness: '3px' }}>
+                            Home
+                        </a>
+                        <a href="#" className="text-gray-700 hover:text-yellow-500 font-semibold hover:underline  hover:decoration-orange-600" onClick={showAboutSection} style={{ textUnderlineOffset: '9px', textDecorationThickness: '3px' }}>
+                            About us
+                        </a>
+                        <a href="#" className="text-gray-700 hover:text-yellow-500 font-semibold hover:underline  hover:decoration-orange-600" onClick={toggleContact} style={{ textUnderlineOffset: '9px', textDecorationThickness: '3px' }}>
+                            Contact
+                        </a>
+                    </div>
+                    <br></br>
+
+                    {showSections && (
+                        <>
+                            <div className="flex justify-center">
+                                {/* قسم المنتجات الجديدة */}
+                                <div id="latest-products" className="inline-block bg-yellow-500 p-2 rounded-lg">
+                                    <h1 className="text-white text-center">Latest Products</h1>
+                                </div>
+                            </div>
+                            {/* القسم الثالث - عرض الصور الآلي */}
+                            <div id="slider" className="relative w-full max-w-xl mx-auto mt-8 overflow-hidden rounded-lg shadow-lg border border-gray-200" style={{ height: '350px', width: '350px' }}>
+                                <div
+                                    className="slider flex transition-transform duration-500 ease-in-out"
+                                    style={{
+                                        transform: ` translateX(-${activeSlide * (100 / totalSlides)}%)`,
+                                        width: `${totalSlides * 100}%`,
+                                    }}
+                                >
+                                    {slides.map((slide, index) => (
+                                        <img
+                                            key={index}
+                                            src={slide.src}
+                                            className="object-cover"
+                                            style={{ height: '350px', width: '350px' }}
+                                            alt={slide.alt}
+                                        />
+                                    ))}
+                                </div>
+                                <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-3 p-2">
+                                    {[...Array(totalSlides)].map((_, index) => (
+                                        <span
+                                            key={index}
+                                            className={`block w-3 h-3 rounded-full ${activeSlide === index ? 'bg-yellow-500' : 'bg-gray-300'}`}
+                                        ></span>
+                                    ))}
+                                </div>
+                            </div>
+                            <br></br>
+                            <div className="flex justify-center items-center space-x-2">
+                                <div id="shop-now" className="inline-flex items-center bg-yellow-500 p-2 rounded-lg">
+                                    <h1 className="text-white text-center">Shop now</h1>
+                                    <img src="img/icon/cart.png" alt="Shopping Cart" className="w-6 h-6 mr-2 animate-bounce" />
+                                </div>
+                            </div>
+
+                            {/* القسم الرابع - قسم المنتجات */}
+                            <div id="three" className="flex flex-wrap justify-center gap-8 mt-8">
+                                {products.map((product) => (
+                                    <div
+                                        key={product.id}
+                                        className="product bg-gray-100 p-4 rounded-md shadow-md hover:shadow-lg relative"
+                                        // زيادة الطول بإضافة style مباشرة
+                                        style={{ width: '350px', height: '450px' }} // تعديل الارتفاع هنا
+                                    >
+                                        {/* صورة المنتج الأساسية */}
+                                        <img
+                                            src={product.img}
+                                            className="w-[250px] h-[250px] object-cover"
+                                            alt={product.name}
+                                        />
+
+                                        {/* صورة المنتج عند التمرير */}
+                                        <img
+                                            src={product.img_hover}
+                                            alt={`${product.name} Hover`}
+                                            className="hover-image absolute inset-0 w-[250px] h-[250px] object-cover"
+                                        />
+
+
+                                        <h3 className="text-lg font-bold text-blue-500  mt-2">{product.name}</h3>
+                                        <p className="text-gray-700 mt-1">${product.price}</p>
+                                        {/* زر لإضافة المنتج إلى السلة */}
+                                        <button
+                                            className="absolute bottom-4 right-4 bg-yellow-500 hover:bg-yellow-600  text-white p-2 rounded-full animate-bounce "
+                                            onClick={() => addToCart(product)}
+                                        >
+                                            <svg
+                                                className="w-6 h-6"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth="2"
+                                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l1.4 7M17 13l-1.4 7M5.4 5h13.2m0 0L18 13m0-8H5m0 0H3"
+                                                ></path>
+                                            </svg>
+                                        </button>
+
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+
+                    {showShopping && (
+                        <div className="p-4">
+                            <h2 className="text-lg font-bold mb-4">My Cart</h2>
+                            <div className="flex flex-col space-y-4">
+                                {cartItems.length > 0 ? (
+                                    cartItems.map((item, index) => (
+                                        <div key={index} className="flex items-center justify-between bg-white p-2 rounded-md shadow-sm">
+                                            {/* صورة المنتج */}
+                                            <img
+                                                src={item.img}
+                                                alt={item.name}
+                                                className="w-16 h-16 object-cover mr-4 rounded-md"
+                                            />
+                                            {/* تفاصيل المنتج */}
+                                            <div className="flex-1">
+                                                <p className="text-lg font-bold">{item.name}</p>
+                                                <p className="text-lg">${item.price}</p>
+                                            </div>
+                                            {/* زر إزالة المنتج من الكارت */}
+                                            <button onClick={() => removeFromCart(index)} className="bg-red-500 text-white p-1 rounded-full">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+
+                                            </button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-gray-500">Your cart is empty.</p>
+                                )}
+                            </div>
+                            <div className="mt-4 flex justify-between items-center">
+                                <span className="text-lg font-bold">Total:</span>
+                                <span className="text-lg font-bold">${total.toFixed(2)}</span>
+                            </div>
+                            <h2 className="text-2xl font-bold text-center text-yellow-500 mb-8">Shopping Cart</h2>
+                            <form onSubmit={handleOrderSubmit} className="max-w-lg mx-auto">
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 font-bold mb-2" htmlFor="name">Name</label>
+                                    <input className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" type="text" id="name" name="name" placeholder="Enter your name" required />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 font-bold mb-2" htmlFor="email">Email</label>
+                                    <input className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" type="email" id="email" name="email" placeholder="Enter your email" required />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 font-bold mb-2" htmlFor="address">Address</label>
+                                    <textarea className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" id="address" name="address" placeholder="Enter your address" required></textarea>
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-gray-700 font-bold mb-2" htmlFor="phone">Phone Number</label>
+                                    <input className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" type="tel" id="phone" name="phone" placeholder="Enter your phone number" required />
+                                </div>
+                                <button type="submit" className="w-full bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-600 transition duration-200">Submit Order</button>
+                            </form>
+                        </div>
+
+                    )}
+
+                    {!showSections && !showShopping && !showContact && showAbout && (
+                        <div id="about" className="mt-16 p-4">
+                            <h2 className="text-center text-yellow-500 text-2xl mb-4">About Us</h2>
+                            <p className="mb-4">
+                                <span className="text-yellow-500 font-bold">Welcome to our online store!</span> We are committed to providing the best products and services to our customers. We pride ourselves on quality and innovation in everything we offer. Our team is dedicated to meeting your needs and ensuring your complete satisfaction.
+                            </p>
+                            <h3 className="text-center text-yellow-500 text-xl mb-2">Our Vision</h3>
+                            <p className="mb-4">
+                                We aim to be the number one destination for online shopping by offering a unique and exceptional shopping experience. We strive to innovate continuously and stay ahead of market trends, ensuring that we provide the latest and greatest products to our customers. Our vision includes expanding our reach globally and becoming a trusted household name in e-commerce.
+                            </p>
+                            <h3 className="text-center text-yellow-500 text-xl mb-2">Our Mission</h3>
+                            <p className="mb-4">
+                                Our mission is to deliver top-quality products with outstanding customer service. We believe in building lasting relationships with our customers based on trust and satisfaction. Every product we offer is carefully selected to meet high standards of quality, ensuring that our customers receive only the best. We are passionate about creating a seamless and enjoyable shopping experience from start to finish.
+                            </p>
+
+                        </div>
+                    )}
+                    {showContact && (
+                        <div id="contact" className="p-4">
+                            <h2 className="text-2xl font-bold text-yellow-500 text-center mb-4">Contact Us</h2>
+
+                            {/* استخدام grid للشاشات المتوسطة والكبيرة وflex للشاشات الصغيرة */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-4 sm:flex sm:flex-wrap sm:justify-center">
+                                {/* أيقونة الفون */}
+                                <div className="flex flex-col items-center text-center sm:flex-row sm:space-x-2 sm:mb-4">
+                                    <img src="img/icon/icons8-smartphone-50.png" alt="Phone" className="w-6 h-6 sm:w-8 sm:h-8" />
+                                    <div className="sm:text-sm">
+                                        <span className="mt-1 block sm:inline">Phone</span>
+                                        <br></br>
+                                        <span className="mt-1 block sm:inline text-yellow-500">1-2392-23928-2</span>
+                                    </div>
+                                </div>
+
+                                {/* أيقونة الأيميل */}
+                                <div className="flex flex-col items-center text-center sm:flex-row sm:space-x-2 sm:mb-4">
+                                    <img src="img/icon/icons8-email-50 (1).png" alt="Email" className="w-6 h-6 sm:w-8 sm:h-8" />
+                                    <div className="sm:text-sm">
+                                        <span className="mt-1 block sm:inline">Email</span>
+                                        <br></br>
+                                        <span className="mt-1 block sm:inline text-yellow-500">mail@company.com</span>
+                                    </div>
+                                </div>
+
+                                {/* أيقونة الآدريس */}
+                                <div className="flex flex-col items-center text-center sm:flex-row sm:space-x-2 sm:mb-4">
+                                    <img src="img/icon/icons8-address-50.png" alt="Address" className="w-6 h-6 sm:w-8 sm:h-8" />
+                                    <div className="sm:text-sm">
+                                        <span className="mt-1 block sm:inline">Address</span>
+                                        <br></br>
+                                        <span className="mt-1 block sm:inline text-yellow-500">Cairo, Egypt</span>
+                                    </div>
+                                </div>
+
+                                {/* أيقونة الأوبيننج آورز */}
+                                <div className="flex flex-col items-center text-center sm:flex-row sm:space-x-2 sm:mb-4">
+                                    <img src="img/icon/icons8-clock-50.png" alt="Opening Hours" className="w-6 h-6 sm:w-8 sm:h-8" />
+                                    <div className="sm:text-sm">
+                                        <span className="mt-1 block sm:inline">Opening Hours</span>
+                                        <br></br>
+                                        <span className="mt-1 block sm:inline text-yellow-500">Monday to Friday (9:00 AM to 5:00 PM)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Form with enhanced design */}
+                    <form className="mb-4 mx-auto max-w-md" onSubmit={handleContactSubmit}>
+                        <div className="mb-4">
+                            <label htmlFor="firstName" className="block text-gray-700">First Name:</label>
+                            <input
+                                type="text"
+                                id="firstName"
+                                className="w-full border border-gray-300 p-2 rounded-md"
+                                value={formData.firstName}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label htmlFor="lastName" className="block text-gray-700">Last Name:</label>
+                            <input
+                                type="text"
+                                id="lastName"
+                                className="w-full border border-gray-300 p-2 rounded-md"
+                                value={formData.lastName}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label htmlFor="email" className="block text-gray-700">Email:</label>
+                            <input
+                                type="email"
+                                id="email"
+                                className="w-full border border-gray-300 p-2 rounded-md"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label htmlFor="phone" className="block text-gray-700">Phone:</label>
+                            <input
+                                type="text"
+                                id="phone"
+                                className="w-full border border-gray-300 p-2 rounded-md"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label htmlFor="message" className="block text-gray-700">Message:</label>
+                            <textarea
+                                id="message"
+                                className="w-full border border-gray-300 p-2 rounded-md"
+                                rows="6"
+                                value={formData.message}
+                                onChange={handleChange}
+                            ></textarea>
+                        </div>
+                        <button type="submit" className="bg-yellow-500 text-white hover:bg-yellow-600  py-2 px-4 rounded-md w-full">Send Message</button>
+                        {statusMessage && <p className="mt-4 text-center">{statusMessage}</p>}
+                    </form>
+                            {/* قسم التواصل الاجتماعي */}
+                            <div className="bg-black p-6 w-full sm:w-auto sm:mx-auto"> {/* تكبير عرض القسم وزيادة البادينج */}
+                                <h3 className="text-center text-white text-2xl font-extrabold mb-6 tracking-wide">
+                                    Follow Us
+                                </h3>
+                                <div className="flex justify-center space-x-8">
+                                    <a href="#" className="text-white text-2xl hover:text-yellow-500">
+                                        <img src="img/icon/icons8-facebook-50.png" alt="Facebook" className="w-9 h-9" />
+                                    </a>
+                                    <a href="#" className="text-white text-2xl hover:text-yellow-500">
+                                        <img src="img/icon/icons8-twitterx-50.png" alt="Twitter" className="w-9 h-9" />
+                                    </a>
+                                    <a href="#" className="text-white text-2xl hover:text-yellow-500">
+                                        <img src="img/icon/icons8-instagram-50.png" alt="Instagram" className="w-9 h-9" />
+                                    </a>
+                                    <a href="#" className="text-white text-2xl hover:text-yellow-500">
+                                        <img src="img/icon/icons8-linkedin-50.png" alt="LinkedIn" className="w-9 h-9" />
+                                    </a>
+                                    <a href="#" className="text-white text-2xl hover:text-yellow-500">
+                                        <img src="img/icon/icons8-youtube-50.png" alt="YouTube" className="w-9 h-9" />
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {!showSections && !showShopping && !showContact && !showAbout && showLogin && (
+                        <div id="login" className="p-4 bg-white border border-gray-200 shadow-md rounded-md">
+
+                            <form onSubmit={handleLoginSubmit} className="mb-4 mx-auto max-w-md">
+                                <div className="mb-4">
+                            <label className="block text-gray-700" >Email:</label>
+                            <input
+                                type="email"
+                                className="w-full border border-gray-300 p-2 rounded-md"
+                                value={loginEmail}
+                                onChange={(e) => setLoginEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                                <div className="mb-4">
+                            <label htmlFor="loginPassword" className="block text-gray-700">Password:</label>
+                            <input
+                                type="password"
+                                id="loginPassword"
+                                className="w-full border border-gray-300 p-2 rounded-md"
+                                value={loginPassword}
+                                onChange={(e) => setLoginPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            className="bg-yellow-500 text-white hover:bg-yellow-600  py-2 px-4 rounded-md"
+                        >
+                            Log In
+                        </button>
+                        {loginStatusMessage && (
+                            <div className="mt-4 text-center text-red-500">
+                                {loginStatusMessage}
+                            </div>
+                        )}
+                    </form>
+                        </div>
+                    )}
+
+                    {!showSections && !showShopping && !showContact && !showAbout && showSignUp && (
+                        <div id="signup" className="p-4 bg-white border border-gray-200 shadow-md rounded-md">
+
+                            <form className="mb-4 mx-auto max-w-md" onSubmit={handleSignupSubmit}>
+                        <div className="mb-4">
+                            <label className="block text-gray-700">Name:</label>
+                            <input
+                                type="text"
+                                className="w-full border border-gray-300 p-2 rounded-md"
+                                value={signupName}
+                                onChange={(e) => setSignupName(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700">Email:</label>
+                            <input
+                                type="email"
+                                className="w-full border border-gray-300 p-2 rounded-md"
+                                value={signupEmail}
+                                onChange={(e) => setSignupEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-gray-700">Password:</label>
+                            <input
+                                type="password"
+                                className="w-full border border-gray-300 p-2 rounded-md"
+                                value={signupPassword}
+                                onChange={(e) => setSignupPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <button type="submit" className="bg-yellow-500 text-white hover:bg-yellow-600  py-2 px-4 rounded-md">Sign Up</button>
+                        {signupStatusMessage && (
+                            <div className="mt-4 text-center text-red-500">
+                                {signupStatusMessage}
+                            </div>
+                        )}
+                    </form>
+                        </div>
+                    )}
+                    {/* القسم الخامس - الفوتر */}
+                    <div id="footer" className="bg-gray-800 py-3/4 mt-8 fixed bottom-0 left-0 right-0 z-50 rounded-lg ">
+                        <div className="container mx-auto flex justify-center items-center">
+                            <span className="text-white text-center mr-2">By Eng : Mostafa Ismail Alanani@</span>
+                            <a href="https://www.linkedin.com/in/mostafa-alanani-657228259?trk=contact-info" target="_blank" rel="noopener noreferrer">
+                                <svg className="w-4 h-4 text-blue-500" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.761 0 5-2.239 5-5v-14c0-2.761-2.239-5-5-5zm-11 19h-3v-10h3v10zm-1.5-11.228c-.966 0-1.75-.785-1.75-1.75s.784-1.75 1.75-1.75 1.75.785 1.75 1.75-.784 1.75-1.75 1.75zm13.5 11.228h-3v-5.5c0-1.381-1.119-2.5-2.5-2.5s-2.5 1.119-2.5 2.5v5.5h-3v-10h3v1.183c.871-.799 2.076-1.183 3.417-1.183 2.485 0 4.5 2.015 4.5 4.5v5.5z" />
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+
+
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+
+</html>
